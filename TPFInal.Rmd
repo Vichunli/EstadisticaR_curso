@@ -36,6 +36,29 @@ Este *dataset* consta de 6 columnas.
 
 Usaamos las funciones `summary()`, `str()` y `glimpse()` para ver qué estructura y qué tipos de variables tiene nuestro dataset 
 
+Luego de ver que
+
+```{r}
+library(lubridate)
+datos_tpR <- datos_tpR %>%
+mutate(Fecha = dmy(Fecha))
+library(skimr)
+str(datos)
+summary(datos_tpR)
+glimpse(datos_tpR)
+skim:(datos_tpR)
+
+datos_tpR %>% #control vs DO
+  ggplot(aes(x = Control, 
+             y = DO,
+             color = Control)) +
+  geom_boxplot(outlier.shape = NA) + #no muestro los outliers por que con la linea que sigue pongo todos los puntos
+  geom_jitter(width = 0.2,
+              alpha = 0.5) +
+  theme_minimal()
+
+```
+
 ## R Markdown
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
