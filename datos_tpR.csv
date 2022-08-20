@@ -193,7 +193,6 @@ Control,Buffer,Temperatura,Placa,Fecha,DO
 -,Conjugado,f,2,15/6/2022,0.3522
 +,Coatting,TA,3,21/6/2022,1.113
 +,Coatting,h,3,21/6/2022,1.496
-+,Coatting,f,3,21/6/2022,2.0363
 +,Citrato,TA,3,21/6/2022,1.769
 +,Citrato,h,3,21/6/2022,1.5109
 +,Citrato,f,3,21/6/2022,2.003

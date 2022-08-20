@@ -9,15 +9,26 @@ datos <- datos %>% #pasar fechas a tipo de dato Date
 str(datos)
 summary(datos)
 glimpse(datos)
+view(datos)
 skim(datos)
 #no hay NAs ni datos extraños
 #las fechas están en formato Date
 
-datos %>% #control vs DO
-  ggplot(aes(x = Control, 
-             y = DO,
-             color = Control)) +
-  geom_boxplot(outlier.shape = NA) + #no muestro los outliers por que con la linea que sigue pongo todos los puntos
-  geom_jitter(width = 0.2,
-              alpha = 0.5) +
+
+datos %>%
+  select(-Placa) %>%
+  filter(Buffer == "Coatting") %>%
+  mutate(Fecha = as.numeric(abs(Fecha - max(Fecha)))) %>%
+  group_by(Control, Temperatura, Fecha) %>%
+  summarise(DOprom = mean(DO), SD = sd(DO)) %>%
+  ggplot(aes(x = Fecha,
+             y = DOprom,
+             color = Temperatura)) +
+  geom_point(size = 3) +
+  geom_line(aes(linetype = Control)) +
+  geom_errorbar(aes(ymin = DOprom - SD,
+                    ymax = DOprom + SD), 
+                width=.2) +
   theme_minimal()
+         
+
