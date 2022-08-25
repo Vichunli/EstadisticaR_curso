@@ -1,11 +1,6 @@
 library(tidyverse)
 library(lubridate)
 library(skimr)
-
-rm(list = ls())
-
-#Acá lo cambiaría por: datos<- read_csv(file = here('datos' , 'datos_tpR.csv'))
-
 datos <- read_csv('datos_tpR.csv')
 
 datos <- datos %>% #pasar fechas a tipo de dato Date
