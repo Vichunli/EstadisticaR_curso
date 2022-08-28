@@ -1,0 +1,228 @@
+---
+title: "TP Final"
+author: "Victoria Ruiz Menna, Lucas Motta"
+date: "2022-08-9"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+En este Trabajo se intenta hacer el análisis de como afectan las distintas temperaturas de almacenamiento, a los buffers utilizados en un ELISA que se intenta utilizar como técnica diagnóstica para Tuberculosis Bovina y cuál de ellas sería la mejor candidata para el almacenamiento para los mismos.
+Para lo cual en el mismo se utilizaron los paquetes del *{tidyverse}* etc....
+
+```{r}
+#install.packages("tidyverse")
+#install.packages("lubridate")
+#install.packages("skimr")
+#install.packages("here")
+library(tidyverse)
+library(lubridate)
+library(skimr)
+library(here)
+```
+
+## Cargar los datos
+```{r}
+datos <- read_csv(file = here ('datos' , 'datos_tpR.csv'))
+
+
+```
+Este *dataset* consta de 6 columnas. 
+
+- Sueros Controles `Control`
+- Tipo de Buffer evaluado `Buffer`
+- Temperatra evaluada `Temperatura`
+- Número de Placa en la que se realizó el ensayo `Placa`
+- Fecha en la que se realizó el muestreo/ alicuota almacenada `Fecha`
+- Resultado de la medición de la Densidad optica `DO`
+
+Usaamos las funciones `summary()`, `str()` y `glimpse()` para ver qué estructura y qué tipos de variables tiene nuestro dataset 
+
+
+```{r}
+library(lubridate)
+datos <- datos%>%
+mutate(Fecha = dmy(Fecha))
+library(skimr)
+str(datos)
+summary(datos)
+glimpse(datos)
+skim(datos)
+
+```
+##Gráficos
+No se encontraron formatos extraños, y las fechas se encuentran formato "date". Se procede a realizar los gráficos.
+
+El primero de ellos consiste en la evaluación de la variación de la Densidad Óptica através del tiempo para el reactivo *Buffer Coatting* en sus tres temperaturas de almacenamientos. Se puede observar que hay un comportamiento semejante entre los Controles postivos por un lado y los controles negativos por el otro.
+
+
+```{r}
+datos <- datos %>%
+  select(-Placa) %>%
+  filter(Buffer == "Coatting") %>%
+  mutate(Fecha = as.numeric(abs(Fecha - max(Fecha))))
+
+
+datos %>%
+  group_by(Control, Temperatura, Fecha) %>%
+  summarise(DOprom = mean(DO), SD = sd(DO)) %>%
+  ggplot(aes(x = Fecha,
+             y = DOprom,
+             color = Temperatura)) +
+  geom_point(size = 3) +
+  geom_line(aes(linetype = Control)) +
+  geom_errorbar(aes(ymin = DOprom - SD,
+                    ymax = DOprom + SD),
+                width=.2) +
+  theme_minimal()
+
+```
+
+Luego se realizó las líneas de tendencia 
+
+```{r}
+cmasfreezer <- datos %>%
+  filter(Control == "+", Temperatura == "Freezer") %>%
+  lm(DO ~ Fecha, .)
+
+g1 <- datos %>%
+  filter(Control == "+", Temperatura == "Freezer") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Freezer | Control: +")
+
+g2 <- datos %>%
+  filter(Control == "-", Temperatura == "Freezer") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Freezer | Control: -")
+
+g3 <- datos %>%
+  filter(Control == "+", Temperatura == "Heladera") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Heladera | Control: +")
+
+g4 <- datos %>%
+  filter(Control == "-", Temperatura == "Heladera") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Heladera | Control: -")
+
+g5 <- datos %>%
+  filter(Control == "+", Temperatura == "Tamb") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Tamb | Control: +")
+
+g6 <- datos %>%
+  filter(Control == "-", Temperatura == "Tamb") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Tamb | Control: -")
+
+library(patchwork)
+
+(g1 | g2) / (g3 | g4 ) / (g5 | g6)
+
+```
+
+##Cálculo de los outliers
+
+```{r}
+
+median(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "+"])
+
+limits_median_Tamb_mas <- c(median(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "+"]),
+                            median(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "+"]))
+
+limits_median_Tamb_menos <- c(median(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "-"]),
+                              median(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "-"]))
+
+limits_median_freezer_menos <- c(median(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "-"]),
+                                 median(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "-"]))
+
+limits_median_freezer_mas <- c(median(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "+"]),
+                               median(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "+"]))
+
+limits_median_heladera_mas <- c(median(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "+"]),
+                                median(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "+"]))
+
+limits_median_heladera_menos <- c(median(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "-"]),
+                                  median(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "-"]))
+
+```
+
+##Grafico sin outliers
+
+```{r}
+g1 <- datos %>%
+  filter(Control == "+", Temperatura == "Freezer") %>%
+  filter(DO > limits_median_freezer_mas[1], DO < limits_median_freezer_mas[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Freezer | Control: +")
+
+g2 <- datos %>%
+  filter(Control == "-", Temperatura == "Freezer") %>%
+  filter(DO > limits_median_freezer_menos[1], DO < limits_median_freezer_menos[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Freezer | Control: -")
+
+g3 <- datos %>%
+  filter(Control == "+", Temperatura == "Heladera") %>%
+  filter(DO > limits_median_heladera_mas[1], DO < limits_median_heladera_mas[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Heladera | Control: +")
+
+g4 <- datos %>%
+  filter(Control == "-", Temperatura == "Heladera") %>%
+  filter(DO > limits_median_heladera_menos[1], DO < limits_median_heladera_menos[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Heladera | Control: -")
+
+g5 <- datos %>%
+  filter(Control == "+", Temperatura == "Tamb") %>%
+  filter(DO > limits_median_Tamb_mas[1], DO < limits_median_Tamb_mas[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Tamb | Control: +")
+
+g6 <- datos %>%
+  filter(Control == "-", Temperatura == "Tamb") %>%
+  filter(DO > limits_median_Tamb_menos[1], DO < limits_median_Tamb_menos[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Tamb | Control: -")
+
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
