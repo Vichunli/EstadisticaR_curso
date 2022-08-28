@@ -37,6 +37,8 @@ cmasfreezer <- datos %>%
   filter(Control == "+", Temperatura == "Freezer") %>%
   lm(DO ~ Fecha, .)
 
+#haciendo los gráficos individuales para calcular la tendencia
+
 g1 <- datos %>%
   filter(Control == "+", Temperatura == "Freezer") %>%
   ggplot(aes(x = Fecha,
@@ -91,24 +93,80 @@ library(patchwork)
 
 #calculo outliers
 
-median(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "+"])
+median(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "+"])
 
-limits_median_Tamb_mas <- c(median(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "+"]),
-                   median(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "+"]))
+limits_median_Tamb_mas <- c(median(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "+"]),
+                   median(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "+"]))
 
-limits_median_Tamb_menos <- c(median(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "-"]),
-                            median(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "-"]))
+limits_median_Tamb_menos <- c(median(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "-"]),
+                            median(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" & datos$Control == "-"]))
 
-limits_median_freezer_menos <- c(median(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "-"]),
-                              median(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "-"]))
+limits_median_freezer_menos <- c(median(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "-"]),
+                              median(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "-"]))
 
-limits_median_freezer_mas <- c(median(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "+"]),
-                                 median(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "+"]))
+limits_median_freezer_mas <- c(median(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "+"]),
+                                 median(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" & datos$Control == "+"]))
 
-limits_median_heladera_mas <- c(median(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "+"]),
-                               median(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "+"]))
+limits_median_heladera_mas <- c(median(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "+"]),
+                               median(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "+"]))
 
-limits_median_heladera_menos <- c(median(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "-"]),
-                                median(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "-"]))
+limits_median_heladera_menos <- c(median(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "-"]),
+                                median(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" & datos$Control == "-"]))
 
-#segun los limites anteriores, no hay outliers 
+#grafico sin outliers
+
+g1 <- datos %>%
+  filter(Control == "+", Temperatura == "Freezer") %>%
+  filter(DO > limits_median_freezer_mas[1], DO < limits_median_freezer_mas[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Freezer | Control: +")
+
+g2 <- datos %>%
+  filter(Control == "-", Temperatura == "Freezer") %>%
+  filter(DO > limits_median_freezer_menos[1], DO < limits_median_freezer_menos[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Freezer | Control: -")
+
+g3 <- datos %>%
+  filter(Control == "+", Temperatura == "Heladera") %>%
+  filter(DO > limits_median_heladera_mas[1], DO < limits_median_heladera_mas[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Heladera | Control: +")
+
+g4 <- datos %>%
+  filter(Control == "-", Temperatura == "Heladera") %>%
+  filter(DO > limits_median_heladera_menos[1], DO < limits_median_heladera_menos[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Heladera | Control: -")
+
+g5 <- datos %>%
+  filter(Control == "+", Temperatura == "Tamb") %>%
+  filter(DO > limits_median_Tamb_mas[1], DO < limits_median_Tamb_mas[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Tamb | Control: +")
+
+g6 <- datos %>%
+  filter(Control == "-", Temperatura == "Tamb") %>%
+  filter(DO > limits_median_Tamb_menos[1], DO < limits_median_Tamb_menos[2]) %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Tamb | Control: -")
+
+(g1 | g2) / (g3 | g4 ) / (g5 | g6)
