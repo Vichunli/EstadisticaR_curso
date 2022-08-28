@@ -9,16 +9,18 @@ datos <- datos %>% #pasar fechas a tipo de dato Date
 str(datos)
 summary(datos)
 glimpse(datos)
-view(datos)
+#view(datos)
 skim(datos)
 #no hay NAs ni datos extraños
 #las fechas están en formato Date
 
-
-datos %>%
+datos <- datos %>%
   select(-Placa) %>%
   filter(Buffer == "Coatting") %>%
-  mutate(Fecha = as.numeric(abs(Fecha - max(Fecha)))) %>%
+  mutate(Fecha = as.numeric(abs(Fecha - max(Fecha))))
+  
+
+datos %>%
   group_by(Control, Temperatura, Fecha) %>%
   summarise(DOprom = mean(DO), SD = sd(DO)) %>%
   ggplot(aes(x = Fecha,
@@ -29,6 +31,60 @@ datos %>%
   geom_errorbar(aes(ymin = DOprom - SD,
                     ymax = DOprom + SD), 
                 width=.2) +
-  theme_minimal()
-         
+  theme_minimal() 
 
+cmasfreezer <- datos %>%
+  filter(Control == "+", Temperatura == "Freezer") %>%
+  lm(DO ~ Fecha, .)
+
+g1 <- datos %>%
+  filter(Control == "+", Temperatura == "Freezer") %>%
+  ggplot(aes(x = Fecha,
+       y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Freezer | Control: +")
+
+g2 <- datos %>%
+  filter(Control == "-", Temperatura == "Freezer") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Freezer | Control: -")
+
+g3 <- datos %>%
+  filter(Control == "+", Temperatura == "Heladera") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Heladera | Control: +")
+
+g4 <- datos %>%
+  filter(Control == "-", Temperatura == "Heladera") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Heladera | Control: -")
+
+g5 <- datos %>%
+  filter(Control == "+", Temperatura == "Tamb") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Tamb | Control: +")
+
+g6 <- datos %>%
+  filter(Control == "-", Temperatura == "Tamb") %>%
+  ggplot(aes(x = Fecha,
+             y = DO)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  labs(title = "Temperatura: Tamb | Control: -")
+
+library(patchwork)
+
+(g1 | g2) / (g3 | g4 ) / (g5 | g6)
