@@ -88,3 +88,27 @@ g6 <- datos %>%
 library(patchwork)
 
 (g1 | g2) / (g3 | g4 ) / (g5 | g6)
+
+#calculo outliers
+
+median(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "+"])
+
+limits_median_Tamb_mas <- c(median(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "+"]),
+                   median(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "+"]))
+
+limits_median_Tamb_menos <- c(median(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "-"]),
+                            median(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Tamb" | datos$Control == "-"]))
+
+limits_median_freezer_menos <- c(median(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "-"]),
+                              median(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "-"]))
+
+limits_median_freezer_mas <- c(median(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "+"]),
+                                 median(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Freezer" | datos$Control == "+"]))
+
+limits_median_heladera_mas <- c(median(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "+"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "+"]),
+                               median(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "+"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "+"]))
+
+limits_median_heladera_menos <- c(median(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "-"]) - 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "-"]),
+                                median(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "-"]) + 2.225 * IQR(datos$DO[datos$Temperatura == "Heladera" | datos$Control == "-"]))
+
+#segun los limites anteriores, no hay outliers 
